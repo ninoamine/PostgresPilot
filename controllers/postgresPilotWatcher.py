@@ -35,36 +35,35 @@ class PostgresPilotWatcher:
             raise SystemError
         self.loggers.log_info("PostgresPilot found in cluster")
         self.loggers.log_info("Starting to watch PostgresqlPilot resources")
-        while True:
-            try:
-                stream = watch.Watch().stream(
-                    self.kube_api.list_cluster_custom_object,
-                    group="postgrespilot.io",
-                    version="v1alpha1",
-                    plural="postgresdatabases",
-                    resource_version=resource_version,
-                )
+        try:
+            stream = watch.Watch().stream(
+                self.kube_api.list_cluster_custom_object,
+                group="postgrespilot.io",
+                version="v1alpha1",
+                plural="postgresdatabases",
+                resource_version=resource_version,
+            )
                 
-                for event in stream:
-                    event_type = event["type"]
-                    instance = event["object"]
+            for event in stream:
+                event_type = event["type"]
+                instance = event["object"]
                     
-                    if event_type == "ADDED":
-                        error_create_database = postgresql_handler.create_postgresql_database(instance['metadata']['name'])
-                        if error_create_database:
-                            self.loggers.log_error(error_create_database)
-                        else:
-                            self.loggers.log_info(f"New PostgreSQL database added: {instance['metadata']['name']}")
-                    elif event_type == "DELETED":
-                        error_delete_database = postgresql_handler.delete_postgresql_database(instance['metadata']['name'])
-                        if error_delete_database:
-                            self.loggers.log_error(error_delete_database)
-                        else:
-                            self.loggers.log_info(f"PostgreSQL database deleted: {instance['metadata']['name']}")
+                if event_type == "ADDED":
+                    error_create_database = postgresql_handler.create_postgresql_database(instance['metadata']['name'])
+                    if error_create_database:
+                        self.loggers.log_error(error_create_database)
+                    else:
+                        self.loggers.log_info(f"New PostgreSQL database added: {instance['metadata']['name']}")
+                elif event_type == "DELETED":
+                    error_delete_database = postgresql_handler.delete_postgresql_database(instance['metadata']['name'])
+                    if error_delete_database:
+                        self.loggers.log_error(error_delete_database)
+                    else:
+                        self.loggers.log_info(f"PostgreSQL database deleted: {instance['metadata']['name']}")
                     
-                    resource_version = instance["metadata"]["resourceVersion"]
+                resource_version = instance["metadata"]["resourceVersion"]
                     
-            except Exception as e:
-                self.loggers.log_error(f"Error watching PostgreSQL instances: {str(e)}")
+        except Exception as e:
+            self.loggers.log_error(f"Error watching PostgreSQL instances: {str(e)}")
         
         
