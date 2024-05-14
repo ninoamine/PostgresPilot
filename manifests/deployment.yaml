@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres-pilot-controller
+  labels:
+    app: postgres-pilot-controller
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres-pilot-controller
+  template:
+    metadata:
+      labels:
+        app: postgres-pilot-controller
+    spec:
+      serviceAccountName: postgres-pilot
+      containers:
+      - image: aminebak/postgres-pilot:0.0.1
+        name: postgres-pilot-controller
+        env:
+          - name: POSTGRESQL_URL
+            value: "postgres://xxxxx:xxxxxxxxx@xxxxxxxxxx:5432/postgres"
