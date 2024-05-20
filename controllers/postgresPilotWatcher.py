@@ -25,7 +25,7 @@ class PostgresPilotWatcher:
     def watch_postgresPilot_instances(self):
         resource_version = ""
         if not postgresql_url_env():
-           self.loggers.log_error("Environment variable POSTGRSQL_URL not found") 
+           self.loggers.log_error("Environment variable POSTGRESQL_URL not found") 
            raise SystemError()
         postgresql_handler = PostgresPilotHandler()
         self.loggers.log_info("Starting postgresql connection")
