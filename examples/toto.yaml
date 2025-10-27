@@ -1,6 +1,0 @@
-apiVersion: postgrespilot.io/v1alpha1
-kind: PostgresqlDatabase
-metadata:
-  name: toto
-spec:
-  databaseName: toto

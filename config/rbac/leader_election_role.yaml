@@ -1,37 +1,40 @@
+# permissions to do leader election.
 apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
+kind: Role
 metadata:
-  creationTimestamp: null
-  name: postgres-pilot
+  labels:
+    app.kubernetes.io/name: postgrespilot
+    app.kubernetes.io/managed-by: kustomize
+  name: leader-election-role
 rules:
+- apiGroups:
+  - ""
+  resources:
+  - configmaps
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - coordination.k8s.io
+  resources:
+  - leases
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
 - apiGroups:
   - ""
   resources:
   - events
   verbs:
-  - get
-  - list
-  - watch
   - create
-  - update
   - patch
-  - delete
-- apiGroups:
-  - postgrespilot.io
-  resources:
-  - postgresdatabases
-  verbs:
-  - get
-  - list
-  - watch
-  - create
-  - update
-  - patch
-  - delete
-- apiGroups: 
-  - apiextensions.k8s.io
-  resources:
-  - customresourcedefinitions
-  verbs:
-  - list
-    

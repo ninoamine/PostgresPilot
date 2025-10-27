@@ -1,12 +1,12 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: postgres-pilot-role-binding
+  name: metrics-auth-rolebinding
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: postgres-pilot
+  name: metrics-auth-role
 subjects:
 - kind: ServiceAccount
-  name: postgres-pilot
-  namespace: xxxxxxxxx
+  name: controller-manager
+  namespace: system

@@ -1,41 +1,33 @@
-FROM python:3.7-slim
+# Build the manager binary
+FROM golang:1.22 AS builder
+ARG TARGETOS
+ARG TARGETARCH
 
-ENV PIP_DEFAULT_TIMEOUT=100 \
-    # Allow statements and log messages to immediately appear
-    PYTHONUNBUFFERED=1 \
-    # disable a pip version check to reduce run-time & log-spam
-    PIP_DISABLE_PIP_VERSION_CHECK=1 \
-    # cache is useless in docker image, so disable to reduce image size
-    PIP_NO_CACHE_DIR=1
+WORKDIR /workspace
+# Copy the Go Modules manifests
+COPY go.mod go.mod
+COPY go.sum go.sum
+# cache deps before building and copying source so that we don't need to re-download as much
+# and so that source changes don't invalidate our downloaded layer
+RUN go mod download
 
+# Copy the go source
+COPY cmd/main.go cmd/main.go
+COPY api/ api/
+COPY internal/ internal/
 
+# Build
+# the GOARCH has not a default value to allow the binary be built according to the host where the command
+# was called. For example, if we call make docker-build in a local env which has the Apple Silicon M1 SO
+# the docker BUILDPLATFORM arg will be linux/arm64 when for Apple x86 it will be linux/amd64. Therefore,
+# by leaving it empty we can ensure that the container and binary shipped on it will have the same platform.
+RUN CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH} go build -a -o manager cmd/main.go
 
-# Set the working directory
-WORKDIR /app
+# Use distroless as minimal base image to package the manager binary
+# Refer to https://github.com/GoogleContainerTools/distroless for more details
+FROM gcr.io/distroless/static:nonroot
+WORKDIR /
+COPY --from=builder /workspace/manager .
+USER 65532:65532
 
-
-# Copy requirements file and install dependencies
-COPY requirements.txt .
-
-RUN set -ex \
-    # Create a non-root user
-    && addgroup --system --gid 1001 appgroup \
-    && adduser --system --uid 1001 --gid 1001 --no-create-home appuser \
-    # Upgrade the package index and install security upgrades
-    && apt-get update \
-    && apt-get upgrade -y \
-    # Install dependencies
-    && pip install -r requirements.txt \
-    # Clean up
-    && apt-get autoremove -y \
-    && apt-get clean -y \
-    && rm -rf /var/lib/apt/lists/*
-
-COPY . .
-
-
-
-# Command to run the application
-CMD ["python", "main.py"]
-
-USER appuser
+ENTRYPOINT ["/manager"]
